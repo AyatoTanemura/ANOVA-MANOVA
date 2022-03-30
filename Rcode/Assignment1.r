@@ -54,10 +54,16 @@ interaction.plot(df.edit$Diet, df.edit$gender, weightdiff, type="b", col=c(1:3),
                  ylab="estimated marginal means", 
                  main="Interaction Plot")
 
+# Question 2 ----
+# Load Data
+x <- read.csv("Data/STATPAK.csv")
 
+# Data check
+x
+head(x)
+str(x)
 
-
-
+# Edit Data type
 
 
 
