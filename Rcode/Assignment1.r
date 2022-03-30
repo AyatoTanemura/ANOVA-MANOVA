@@ -63,7 +63,41 @@ x
 head(x)
 str(x)
 
-# Edit Data type
+# SW test
+shapiro.test(x$Time)
+shapiro.test(x$Satisfaction)
 
+# Box plot/Hist/QQplot/Density
+boxplot(Time ~ StatPak, data = x)
+boxplot(Satisfaction ~ StatPak, data = x)
+
+## Time Viz
+qqnorm(x$Time)
+qqline(x$Time)
+hist(x$Time)
+plot(density(x$Time))
+
+## Satisfaction Viz
+qqnorm(x$Satisfaction)
+qqline(x$Satisfaction)
+hist(x$Satisfaction)
+plot(density(x$Satisfaction))
+
+#Outliers detection and removal
+ 
+olTime <- boxplot(Time ~ StatPak, data = x)$out
+olSatisfaction <- boxplot(Satisfaction ~ StatPak, data = x)$out
+
+print(olTime)
+print(olSatisfaction)
+
+out <- x[x$StatPak == "BMDP" & (x$Time == 15 | x$Time == 44 | x$Time == 8),]
+print(out)
+
+outAll <- rbind(out)
+print(outAll)
+
+# remove outliers
+x1 <- x[-which(x$No %in% outAll$No),]
 
 
