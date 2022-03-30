@@ -5,6 +5,9 @@ library(gplots)
 library(ggplot2)
 library(tidyverse)
 library(nortest)
+library(car)
+library(RColorBrewer)
+library(biotools)
 
 # Load Data ----
 df <- read.csv("Data/DIET.csv") %>% 
@@ -55,7 +58,7 @@ interaction.plot(df.edit$Diet, df.edit$gender, weightdiff, type="b", col=c(1:3),
                  main="Interaction Plot")
 
 # Question 2 ----
-# Load Data
+# Load Data ----
 x <- read.csv("Data/STATPAK.csv")
 
 # Data check
@@ -63,11 +66,11 @@ x
 head(x)
 str(x)
 
-# SW test
+# SW test ----
 shapiro.test(x$Time)
 shapiro.test(x$Satisfaction)
 
-# Box plot/Hist/QQplot/Density
+# Box plot/Hist/QQplot/Density ----
 boxplot(Time ~ StatPak, data = x)
 boxplot(Satisfaction ~ StatPak, data = x)
 
@@ -83,7 +86,7 @@ qqline(x$Satisfaction)
 hist(x$Satisfaction)
 plot(density(x$Satisfaction))
 
-#Outliers detection and removal
+#Outliers detection and removal ----
  
 olTime <- boxplot(Time ~ StatPak, data = x)$out
 olSatisfaction <- boxplot(Satisfaction ~ StatPak, data = x)$out
@@ -98,6 +101,21 @@ outAll <- rbind(out)
 print(outAll)
 
 # remove outliers
-x1 <- x[-which(x$No %in% outAll$No),]
+x1 <- x[-which(x$No %in% outAll$No),] %>% 
+  mutate(Satisfaction = as.numeric(Satisfaction))
 
+# Test homogenity of variance and covariance ----
 
+## Levene test
+leveneTest(Time ~ StatPak, data = x1)
+leveneTest(Satisfaction ~ StatPak, data = x1)
+
+## Box's M test 
+boxM(data = x1[,6:7], group = x1$StatPak)
+
+# One way anova
+Y <- cbind(x1$Time,x1$Satisfaction)
+fit <- manova(Y ~ StatPak, data = x1)
+summary(fit)
+
+#?????????????????????
