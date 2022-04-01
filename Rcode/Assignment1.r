@@ -113,7 +113,7 @@ leveneTest(Satisfaction ~ StatPak, data = x1)
 ## Box's M test 
 boxM(data = x1[,6:7], group = x1$StatPak)
 
-# One way anova
+# One way manova
 Y <- cbind(x1$Time,x1$Satisfaction)
 fit <- manova(Y ~ StatPak, data = x1)
 summary(fit)
