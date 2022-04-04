@@ -8,50 +8,50 @@ library(nortest)
 library(car)
 library(RColorBrewer)
 library(biotools)
+library(PMCMRplus)
 
 # Load Data ----
-df <- read.csv("Data/DIET.csv") %>% 
+df.weight <- read.csv("Data/DIET.csv") %>% 
   mutate(gender = factor(gender),
-         Diet = factor(Diet))
-df.edit <- df %>% 
-  mutate(gender = case_when(
-                            gender == 0 ~ "female",
-                            TRUE ~ "male")
+         Diet = factor(Diet),
+         gender = case_when(
+           gender == 0 ~ "female",
+           TRUE ~ "male")
          )
 
 # Data check
-df
-head(df)
-names(df)
+dim(df.weight)
+head(df.weight)
+str(df.weight)
 
 # Viewing Data ----
-weightdiff <- df$pre.weight - df$weight6weeks
+weightdiff <- df.weight$pre.weight - df.weight$weight6weeks
 
-ggplot(df.edit, aes(gender, weightdiff))+geom_boxplot()
+ggplot(df.weight, aes(gender, weightdiff))+geom_boxplot()
 
-ggplot(df.edit, aes(Diet, weightdiff))+geom_boxplot()
+ggplot(df.weight, aes(Diet, weightdiff))+geom_boxplot()
 
-ggplot(data = df.edit)+geom_boxplot(aes(x = Diet, y = weightdiff)) + facet_wrap(~gender)
+ggplot(data = df.weight)+geom_boxplot(aes(x = Diet, y = weightdiff)) + facet_wrap(~gender)
 
 #KS test
 lillie.test(weightdiff)
-lillie.test(weightdiff[df.edit$gender == 'female'])
-
+lillie.test(weightdiff[df.weight$gender == 'female'])
+lillie.test(weightdiff[df.weight$gender == 'male'])
 #SW test 
 shapiro.test(weightdiff)
 
 #Two-way ANOVA ----
 #Assumption Check
 
-fit <- aov(weightdiff~gender*Diet, data = df.edit)
-summary(fit)
+fit.weight <- aov(weightdiff~gender*Diet, data = df.weight)
+summary(fit.weight)
 
 #Tukey
-TukeyHSD(fit)
+TukeyHSD(fit.weight)
 
 # Interaction plot
 
-interaction.plot(df.edit$Diet, df.edit$gender, weightdiff, type="b", col=c(1:3), 
+interaction.plot(df.weight$Diet, df.edit$gender, weightdiff, type="b", col=c(1:3), 
                  leg.bty="o", leg.bg="beige", lwd=2, pch=c(18,24,22),	
                  xlab="Diet type", 
                  ylab="estimated marginal means", 
@@ -59,63 +59,68 @@ interaction.plot(df.edit$Diet, df.edit$gender, weightdiff, type="b", col=c(1:3),
 
 # Question 2 ----
 # Load Data ----
-x <- read.csv("Data/STATPAK.csv")
+df.stat <- read.csv("Data/STATPAK.csv") %>% 
+  mutate(StatPak = factor(StatPak))
 
 # Data check
-x
-head(x)
-str(x)
+head(df.stat)
+str(df.stat)
 
 # SW test ----
-shapiro.test(x$Time)
-shapiro.test(x$Satisfaction)
+shapiro.test(df.stat$Time)
+shapiro.test(df.stat$Satisfaction)
 
 # Box plot/Hist/QQplot/Density ----
-boxplot(Time ~ StatPak, data = x)
-boxplot(Satisfaction ~ StatPak, data = x)
+boxplot(Time ~ StatPak, data = df.stat)
+boxplot(Satisfaction ~ StatPak, data = df.stat)
 
 ## Time Viz
-qqnorm(x$Time)
-qqline(x$Time)
-hist(x$Time)
-plot(density(x$Time))
+qqline(df.stat$Time)
+hist(df.stat$Time)
+plot(density(df.stat$Time))
 
 ## Satisfaction Viz
-qqnorm(x$Satisfaction)
-qqline(x$Satisfaction)
-hist(x$Satisfaction)
-plot(density(x$Satisfaction))
+qqline(df.stat$Satisfaction)
+hist(df.stat$Satisfaction)
+plot(density(df.stat$Satisfaction))
 
 #Outliers detection and removal ----
  
-olTime <- boxplot(Time ~ StatPak, data = x)$out
-olSatisfaction <- boxplot(Satisfaction ~ StatPak, data = x)$out
+olTime <- boxplot(Time ~ StatPak, data = df.stat)$out
+olSatisfaction <- boxplot(Satisfaction ~ StatPak, data = df.stat)$out
 
-print(olTime)
-print(olSatisfaction)
+olTime
+olSatisfaction
 
-out <- x[x$StatPak == "BMDP" & (x$Time == 15 | x$Time == 44 | x$Time == 8),]
-print(out)
-
-outAll <- rbind(out)
-print(outAll)
+out <- df.stat[df.stat$StatPak == "BMDP" & (df.stat$Time == 15 | df.stat$Time == 44 | df.stat$Time == 8),]
+out
 
 # remove outliers
-x1 <- x[-which(x$No %in% outAll$No),] %>% 
+df.NoOutlier <- df.stat[-which(x$No %in% outAll$No),] %>% 
   mutate(Satisfaction = as.numeric(Satisfaction))
 
 # Test homogenity of variance and covariance ----
 
 ## Levene test
-leveneTest(Time ~ StatPak, data = x1)
-leveneTest(Satisfaction ~ StatPak, data = x1)
+leveneTest(Time ~ StatPak, data = df.NoOutlier)
+leveneTest(Satisfaction ~ StatPak, data = df.NoOutlier)
 
 ## Box's M test 
-boxM(data = x1[,6:7], group = x1$StatPak)
+boxM(data = df.NoOutlier[,6:7], group = df.NoOutlier$StatPak)
 
 # One way manova
-Y <- cbind(x1$Time,x1$Satisfaction)
-fit <- manova(Y ~ StatPak, data = x1)
-summary(fit)
+RespoVari <- cbind(df.NoOutlier$Time,df.NoOutlier$Satisfaction)
+fit.stat <- manova(RespoVari ~ StatPak, data = df.NoOutlier)
+summary(fit.stat, test = 'Pillai')
 
-#?????????????????????
+# Tamhane test for Time
+
+fit.T2 <- tamhaneT2Test(df.NoOutlier$Time, df.NoOutlier$StatPak)
+summary(fit.T2)
+
+# Tukey test for satisfaction
+
+?TukeyHSD
+
+fit.TK <- aov(Satisfaction ~ StatPak, data = df.NoOutlier)
+TukeyHSD(fit.TK)
