@@ -1,7 +1,0 @@
----
-title: "Assignment 1"
-author: "Ayato Tanemura"
-date: "`r Sys.Date()`"
-output: pdf_document
----
-

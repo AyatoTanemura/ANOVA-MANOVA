@@ -1,0 +1,16 @@
+tidyverse
+ggplot2
+tibble
+tidyr
+readr
+purrr
+dplyr
+stringr
+forcats
+nortest
+carData
+car
+RColorBrewer
+MASS
+biotools
+PMCMRplus

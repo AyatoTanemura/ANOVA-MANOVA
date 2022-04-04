@@ -1,0 +1,194 @@
+---
+title: "Assignment 1"
+author: "Ayato Tanemura (atan524)"
+output: pdf_document
+---
+
+\newpage
+
+```{r include=FALSE}
+knitr::opts_chunk$set(comment = ">")
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+library(tidyverse)
+library(nortest)
+library(car)
+library(RColorBrewer)
+library(biotools)
+library(PMCMRplus)
+```
+# Question 1
+```{r include=FALSE}
+
+df.weight <- read.csv("Data/DIET.csv") %>% 
+  mutate(gender = factor(gender),
+         Diet = factor(Diet),
+         gender = case_when(
+           gender == 0 ~ "female",
+           TRUE ~ "male")
+         )
+weightdiff <- df.weight$pre.weight - df.weight$weight6weeks
+```
+
+## (a) Essential assumption check
+### (i) Normality Distribution
+
+#### SW test:
+```{r echo=FALSE}
+##SW test 
+shapiro.test(weightdiff)
+```
+
+We want to see non-significant result.
+
+P-value for weight difference test of SW is more than 0.05. H0 is not rejected and we conclude that the assumption f normality is satisfied. 
+
+#### Normality plot:
+
+```{r echo=FALSE, fig.align='center'}
+boxplot(weightdiff ~ Diet*gender, data = df.weight)
+```
+
+* weightdiff shows the difference between before and after six weeks.
+
+* The formula is `weightdiff = (weight before diet) - (weight 6 weeks after)`
+
+#### Outliers check:
+
+4 outliers are identified via this plot. 
+
+There are 1 (Diet1, Male), 1 (Diet1, Female), 1 (Diet2, Male), and 1 (Diet3, Female) observations should be omitted. 
+
+Therefore, 4 observations will be deleted as outliers. 
+
+```{r include=FALSE}
+# Outlier detection
+
+outlier.weight <- boxplot(weightdiff ~ Diet*gender, data = df.weight)$out
+outlier.weight
+
+ol.weight.1.f <- df.weight[df.weight$Diet == 1 & df.weight$gender == "female" & weightdiff == 8.5,]
+ol.weight.1.m <- df.weight[df.weight$Diet == 1 & df.weight$gender == "male" & weightdiff == 9.0,]
+ol.weight.2.m <- df.weight[df.weight$Diet == 2 & df.weight$gender == "male" & weightdiff < 0,]
+ol.weight.3.f <- df.weight[df.weight$Diet == 3 & df.weight$gender == "female" & weightdiff < 1,]
+
+ol.weight.all <- rbind(ol.weight.1.f, ol.weight.1.m, ol.weight.2.m, ol.weight.3.f)
+
+weight.NoOut <- df.weight[-which(df.weight$Person %in% ol.weight.all$Person),]
+nrow(df.weight) - nrow(weight.NoOut)
+
+weightdiff.NoOut = weight.NoOut$pre.weight - weight.NoOut$weight6weeks
+```
+
+### (ii) Homogeneity of Variance
+
+#### Levenne's test
+```{r echo=FALSE}
+leveneTest(weightdiff.NoOut ~ gender*Diet, data = weight.NoOut)
+```
+
+The p-value is more than 0.05 (level of significance), which means the result is non-significant.
+
+Therefore, Homogeneity is met.
+
+
+### (iii) Independence
+
+????
+
+## (b) Interaction Plot
+
+```{r echo=FALSE, fig.align='center'}
+interaction.plot(weight.NoOut$Diet, weight.NoOut$gender, weightdiff.NoOut, type="b", col=c(1:3), 
+                 leg.bty="o", leg.bg="beige", lwd=2, pch=c(18,24,22),	
+                 xlab="Diet type", 
+                 ylab="estimated marginal means", 
+                 main="Interaction Plot")
+```
+
+
+## (c) Difference between Male Diet 1 and 2
+### ANOVA summary:??
+```{r echo=FALSE}
+#Assumption Check
+
+fit.weight <- aov(weightdiff.NoOut~gender*Diet, data = weight.NoOut)
+summary(fit.weight)
+```
+
+### Tukey test:
+```{r echo=FALSE}
+#Tukey
+TukeyHSD(fit.weight)
+```
+
+## (d) Highest Efficiency
+As you can see form the interaction plot, Female Diet 3 has the largest impact on weight difference. 
+It is regarding both gender and diet type. 
+
+As can bee seen the difference between before and after six weeks, the larger difference of weight for Male Diet 1 and 2 while it has larger impact on weight difference for Female Diet 3. 
+
+
+# Question 2
+```{r}
+df.stat <- read.csv("Data/STATPAK.csv") %>% 
+  mutate(StatPak = factor(StatPak))
+```
+## (a)Outliers & Homogeneity
+### Outliers
+
+```{r, fig.align='center'}
+# Outliers Detestion
+olTime <- boxplot(Time ~ StatPak, data = df.stat)$out
+olSatisfaction <- boxplot(Satisfaction ~ StatPak, data = df.stat)$out
+
+olTime
+olSatisfaction
+
+out <- df.stat[df.stat$StatPak == "BMDP" & (df.stat$Time == 15 | df.stat$Time == 44 | df.stat$Time == 8),]
+out
+```
+
+```{r}
+# Remove Outliers
+df.NoOutlier <- df.stat[-which(df.stat$No %in% out$No),] %>% 
+  mutate(Satisfaction = as.numeric(Satisfaction))
+```
+
+### Homogeneity of Variance and covariance
+#### Levene's test for Time
+```{r echo=FALSE}
+leveneTest(Time ~ StatPak, data = df.NoOutlier)
+```
+
+P-value of Levene's for Time is 0.004 < 0.05 -> assumption is not satisfied.
+
+#### Levene's test for Satisfaction
+```{r echo=FALSE}
+leveneTest(Satisfaction ~ StatPak, data = df.NoOutlier)
+```
+
+P-value of Levene;s for Satisfaction is 0.6322 < 0.05 -> assumption is satisfied.
+
+#### Box's M test
+```{r echo=FALSE}
+boxM(data = df.NoOutlier[,6:7], group = df.NoOutlier$StatPak)
+```
+
+P-value of Box test is 0.007 < 0.05
+-> Homogeneity of cov matrices assumption not met. We should use Pillai's Trace for interpretation of MANOVA results.
+
+## (b) Effects of stat packages
+```{r}
+# One way manova
+RespoVari <- cbind(df.NoOutlier$Time,df.NoOutlier$Satisfaction)
+fit.stat <- manova(RespoVari ~ StatPak, data = df.NoOutlier)
+summary(fit.stat, test = 'Pillai')
+summary.aov(fit.stat)
+```
+
+## (c) Independent Group
+
+
+

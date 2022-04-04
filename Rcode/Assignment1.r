@@ -1,8 +1,7 @@
 # Question 1 ----
 # Library----
-library(s20x)
-library(gplots)
-library(ggplot2)
+
+
 library(tidyverse)
 library(nortest)
 library(car)
