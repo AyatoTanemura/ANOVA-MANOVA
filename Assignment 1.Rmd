@@ -1,7 +1,11 @@
 ---
 title: "Assignment 1"
 author: "Ayato Tanemura (atan524)"
-output: pdf_document
+output: 
+  pdf_document:
+    toc: true
+    toc_depth: 4
+  
 ---
 
 \newpage
@@ -32,7 +36,7 @@ weightdiff <- df.weight$pre.weight - df.weight$weight6weeks
 ```
 
 ## (a) Essential assumption check
-### (i) Normality Distribution
+### Normality Distribution
 
 #### SW test:
 ```{r echo=FALSE}
@@ -42,7 +46,7 @@ shapiro.test(weightdiff)
 
 We want to see non-significant result.
 
-P-value for weight difference test of SW is more than 0.05. H0 is not rejected and we conclude that the assumption f normality is satisfied. 
+P-value for weight difference test of SW is more than 0.05. H0 is not rejected and we conclude that the assumption for normality is satisfied. 
 
 #### Normality plot:
 
@@ -81,7 +85,7 @@ nrow(df.weight) - nrow(weight.NoOut)
 weightdiff.NoOut = weight.NoOut$pre.weight - weight.NoOut$weight6weeks
 ```
 
-### (ii) Homogeneity of Variance
+### Homogeneity of Variance
 
 #### Levenne's test
 ```{r echo=FALSE}
@@ -92,10 +96,6 @@ The p-value is more than 0.05 (level of significance), which means the result is
 
 Therefore, Homogeneity is met.
 
-
-### (iii) Independence
-
-????
 
 ## (b) Interaction Plot
 
@@ -108,8 +108,8 @@ interaction.plot(weight.NoOut$Diet, weight.NoOut$gender, weightdiff.NoOut, type=
 ```
 
 
-## (c) Difference between Male Diet 1 and 2
-### ANOVA summary:??
+## (c)?? Difference between Male Diet 1 and 2
+### ANOVA summary:
 ```{r echo=FALSE}
 #Assumption Check
 
@@ -124,7 +124,7 @@ TukeyHSD(fit.weight)
 ```
 
 ## (d) Highest Efficiency
-As you can see form the interaction plot, Female Diet 3 has the largest impact on weight difference. 
+As you can see from the interaction plot, Female Diet 3 has the largest impact on weight difference. 
 It is regarding both gender and diet type. 
 
 As can bee seen the difference between before and after six weeks, the larger difference of weight for Male Diet 1 and 2 while it has larger impact on weight difference for Female Diet 3. 
@@ -135,7 +135,7 @@ As can bee seen the difference between before and after six weeks, the larger di
 df.stat <- read.csv("Data/STATPAK.csv") %>% 
   mutate(StatPak = factor(StatPak))
 ```
-## (a)Outliers & Homogeneity
+## (a) Outliers & Homogeneity
 ### Outliers
 
 ```{r, fig.align='center'}
@@ -179,8 +179,8 @@ boxM(data = df.NoOutlier[,6:7], group = df.NoOutlier$StatPak)
 P-value of Box test is 0.007 < 0.05
 -> Homogeneity of cov matrices assumption not met. We should use Pillai's Trace for interpretation of MANOVA results.
 
-## (b) Effects of stat packages
-```{r}
+## (b)?? Effects of stat packages
+```{r echo=FALSE}
 # One way manova
 RespoVari <- cbind(df.NoOutlier$Time,df.NoOutlier$Satisfaction)
 fit.stat <- manova(RespoVari ~ StatPak, data = df.NoOutlier)
@@ -188,7 +188,16 @@ summary(fit.stat, test = 'Pillai')
 summary.aov(fit.stat)
 ```
 
-## (c) Independent Group
+## (c)?? Independent Group
+### Tamhane test for Time
+```{r echo=FALSE}
+fit.T2 <- tamhaneT2Test(df.NoOutlier$Time, df.NoOutlier$StatPak)
+summary(fit.T2)
+```
 
-
+### Tukey test for satisfaction
+```{r echo=FALSE}
+fit.TK <- aov(Satisfaction ~ StatPak, data = df.NoOutlier)
+TukeyHSD(fit.TK)
+```
 

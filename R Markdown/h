@@ -1,0 +1,14 @@
+[33m13884d3[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m)[m create report
+[33m1eb37a7[m create R Markdown file
+[33mf72c4c8[m[33m ([m[1;31morigin/main[m[33m)[m add outlier detection in q1
+[33m45c53c7[m add Ken's Advice
+[33meb3f8a6[m add ANOVA&MANOVA pdf
+[33m457519f[m test homogenity of variance and covariance
+[33m13e0983[m remove outliers
+[33m6e7e0fe[m Load Q2 Data
+[33m6fa28be[m add STATPAK data
+[33m01a4e3b[m Assumption check
+[33ma3c58e6[m Load Data
+[33m4318c55[m rename Rcode folder
+[33m470193c[m add Assignment1 R file
+[33m59b8bef[m create new repo

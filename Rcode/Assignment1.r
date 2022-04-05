@@ -138,6 +138,7 @@ boxM(data = df.NoOutlier[,6:7], group = df.NoOutlier$StatPak)
 RespoVari <- cbind(df.NoOutlier$Time,df.NoOutlier$Satisfaction)
 fit.stat <- manova(RespoVari ~ StatPak, data = df.NoOutlier)
 summary(fit.stat, test = 'Pillai')
+summary.aov(fit.stat)
 
 # Tamhane test for Time
 
@@ -145,8 +146,6 @@ fit.T2 <- tamhaneT2Test(df.NoOutlier$Time, df.NoOutlier$StatPak)
 summary(fit.T2)
 
 # Tukey test for satisfaction
-
-?TukeyHSD
 
 fit.TK <- aov(Satisfaction ~ StatPak, data = df.NoOutlier)
 TukeyHSD(fit.TK)
