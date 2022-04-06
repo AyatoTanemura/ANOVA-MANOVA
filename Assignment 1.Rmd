@@ -38,16 +38,6 @@ weightdiff <- df.weight$pre.weight - df.weight$weight6weeks
 ## (a) Essential assumption check
 ### Normality Distribution
 
-#### SW test:
-```{r echo=FALSE}
-##SW test 
-shapiro.test(weightdiff)
-```
-
-We want to see non-significant result.
-
-P-value for weight difference test of SW is more than 0.05. H0 is not rejected and we conclude that the assumption for normality is satisfied. 
-
 #### Normality plot:
 
 ```{r echo=FALSE, fig.align='center'}
@@ -85,6 +75,16 @@ nrow(df.weight) - nrow(weight.NoOut)
 weightdiff.NoOut = weight.NoOut$pre.weight - weight.NoOut$weight6weeks
 ```
 
+#### SW test:
+```{r echo=FALSE}
+##SW test 
+shapiro.test(weightdiff.NoOut)
+```
+
+We want to see non-significant result.
+
+P-value for weight difference test of SW is 0.938 which is more than 0.05. H0 is not rejected and we conclude that the assumption for normality is satisfied. 
+
 ### Homogeneity of Variance
 
 #### Levenne's test
@@ -108,7 +108,7 @@ interaction.plot(weight.NoOut$Diet, weight.NoOut$gender, weightdiff.NoOut, type=
 ```
 
 
-## (c)?? Difference between Male Diet 1 and 2
+## (c) Difference between Male Diet 1 and 2
 ### ANOVA summary:
 ```{r echo=FALSE}
 #Assumption Check
@@ -119,9 +119,13 @@ summary(fit.weight)
 
 ### Tukey test:
 ```{r echo=FALSE}
-#Tukey
-TukeyHSD(fit.weight)
+#Tamhane
+summary(T2 <- tamhaneT2Test(weightdiff.NoOut, as.factor(weight.NoOut$gender) : as.factor(weight.NoOut$Diet)))
 ```
+
+As you can see the Tamhane test result above, the p-value for male:1 - male:2 == 0 (7th row in gender:Diet table) is 0.9988759 which is larger than 0.05 significance level. The hull hypothesis is not rejected. Null hypothesis in this case is Male Diet 1 and Male Diet 2 has no difference. 
+
+Therefore, there is no significant difference in the weight loss of males between diet 1 and diet 2. 
 
 ## (d) Highest Efficiency
 As you can see from the interaction plot, Female Diet 3 has the largest impact on weight difference. 
@@ -138,7 +142,7 @@ df.stat <- read.csv("Data/STATPAK.csv") %>%
 ## (a) Outliers & Homogeneity
 ### Outliers
 
-```{r, fig.align='center'}
+```{r fig.align='center', fig.dim = c(6, 4)}
 # Outliers Detestion
 olTime <- boxplot(Time ~ StatPak, data = df.stat)$out
 olSatisfaction <- boxplot(Satisfaction ~ StatPak, data = df.stat)$out
@@ -155,6 +159,21 @@ out
 df.NoOutlier <- df.stat[-which(df.stat$No %in% out$No),] %>% 
   mutate(Satisfaction = as.numeric(Satisfaction))
 ```
+
+#### SW test
+```{r echo=FALSE}
+# SW test for Time
+shapiro.test(df.NoOutlier$Time)
+```
+
+P-value for Time of SW is 0.008 which is less than 0.01 significance level. H0 is rejected and the assumption of multivariate normality is not satisfied. 
+
+```{r echo=FALSE}
+# SW test for satisfaction
+shapiro.test(df.NoOutlier$Satisfaction)
+```
+
+P-value for Satisfaction of SW is 0.03 which is more than 0.01 significance level. H0 is not rejected and the assumption of multivariate normality is satisfied. 
 
 ### Homogeneity of Variance and covariance
 #### Levene's test for Time
@@ -179,14 +198,26 @@ boxM(data = df.NoOutlier[,6:7], group = df.NoOutlier$StatPak)
 P-value of Box test is 0.007 < 0.05
 -> Homogeneity of cov matrices assumption not met. We should use Pillai's Trace for interpretation of MANOVA results.
 
-## (b)?? Effects of stat packages
+## (b) Main effects
+
 ```{r echo=FALSE}
 # One way manova
 RespoVari <- cbind(df.NoOutlier$Time,df.NoOutlier$Satisfaction)
 fit.stat <- manova(RespoVari ~ StatPak, data = df.NoOutlier)
 summary(fit.stat, test = 'Pillai')
+```
+
+In this case, Pillai trace is used for multivariate test. 
+Based on the Pillai's Trce result, StatPak has a statistically significant effect on Time and Satisfaction as a group (F=38.6, p=0.000<0.01)
+
+```{r echo=FALSE}
 summary.aov(fit.stat)
 ```
+Response 1 -> Time
+
+Response 2 -> Satisfaction
+
+There are significant relationships between both StatPak & Time and StatPak & Satisfaction. This means different stat packages has a significant effect on the results of Time and Satisfactions as an individual. 
 
 ## (c)?? Independent Group
 ### Tamhane test for Time
