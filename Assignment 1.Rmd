@@ -4,7 +4,7 @@ author: "Ayato Tanemura (atan524)"
 output: 
   pdf_document:
     toc: true
-    toc_depth: 4
+    toc_depth: 3
   
 ---
 
@@ -13,12 +13,11 @@ output:
 ```{r include=FALSE}
 knitr::opts_chunk$set(comment = ">")
 ```
-
-```{r message=FALSE, warning=FALSE, include=FALSE}
-library(tidyverse)
+# Libraries
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(tidyverse) # additional library
 library(nortest)
 library(car)
-library(RColorBrewer)
 library(biotools)
 library(PMCMRplus)
 ```
@@ -83,7 +82,7 @@ shapiro.test(weightdiff.NoOut)
 
 We want to see non-significant result.
 
-P-value for weight difference test of SW is 0.938 which is more than 0.05. H0 is not rejected and we conclude that the assumption for normality is satisfied. 
+P-value for weight difference test of SW is 0.938 which is more than 0.01. H0 is not rejected and we conclude that the assumption for normality is satisfied. 
 
 ### Homogeneity of Variance
 
@@ -92,13 +91,50 @@ P-value for weight difference test of SW is 0.938 which is more than 0.05. H0 is
 leveneTest(weightdiff.NoOut ~ gender*Diet, data = weight.NoOut)
 ```
 
-The p-value is more than 0.05 (level of significance), which means the result is non-significant.
+The p-value is 0.1867 which is more than 0.01 (level of significance), which means the result is non-significant.
 
 Therefore, Homogeneity is met.
 
 
-## (b) Interaction Plot
+## (b) Main output & Interaction Plot
 
+### Main output:
+#### ANOVA summary:
+```{r echo=FALSE}
+#Assumption Check
+
+fit.weight <- aov(weightdiff.NoOut~gender*Diet, data = weight.NoOut)
+summary(fit.weight)
+```
+
+In the result of ANOVA summary, you can conclude the following, based on the p-values and a significance level of 0.01:
+
+* The p-value for gender is 0.448, there is non-significance deference between genders in relationship with weight difference, which indicates that the gender types are not associated with volume of weight loss.
+
+* The p-value for Diet is 0.000, there is significant differences between Diet types in relationship with weight difference, which indicates that the diet types are associated with volume of weight loss.
+
+* The p-value for the interaction between gender*Diet is 0.000, there is significant interaction between gender and Diet, which indicates that the relationship between gender types and volume of weight loss depends on the types of diet. 
+
+#### Tukey test:
+```{r echo=FALSE}
+#Tukey
+TukeyHSD(fit.weight)
+```
+
+Factor gender:
+
+Because the p-value = 0.448>0.01, it can be concluded that there is non significant difference between Male and Female. 
+
+Factor Diet:
+
+In the relationship with weight difference, there is not a significant difference between Diet 1 and Diet 2 (p-value = 0.764) while there are significant difference between Diet 1 and Diet 3 (p-value = 0.000); and Diet 2 and Diet 3 (p-value = 0.000).
+
+The mean difference between Diet1 and Diet 3 is the highest.
+
+A Tukey post hoc test revealed that the weight loss was statistically significantly increased after taking Diet 3 compared to Diet 1 and Diet 2.
+
+
+### Interaction Plot
 ```{r echo=FALSE, fig.align='center'}
 interaction.plot(weight.NoOut$Diet, weight.NoOut$gender, weightdiff.NoOut, type="b", col=c(1:3), 
                  leg.bty="o", leg.bg="beige", lwd=2, pch=c(18,24,22),	
@@ -109,21 +145,8 @@ interaction.plot(weight.NoOut$Diet, weight.NoOut$gender, weightdiff.NoOut, type=
 
 
 ## (c) Difference between Male Diet 1 and 2
-### ANOVA summary:
-```{r echo=FALSE}
-#Assumption Check
 
-fit.weight <- aov(weightdiff.NoOut~gender*Diet, data = weight.NoOut)
-summary(fit.weight)
-```
-
-### Tukey test:
-```{r echo=FALSE}
-#Tamhane
-summary(T2 <- tamhaneT2Test(weightdiff.NoOut, as.factor(weight.NoOut$gender) : as.factor(weight.NoOut$Diet)))
-```
-
-As you can see the Tamhane test result above, the p-value for male:1 - male:2 == 0 (7th row in gender:Diet table) is 0.9988759 which is larger than 0.05 significance level. The hull hypothesis is not rejected. Null hypothesis in this case is Male Diet 1 and Male Diet 2 has no difference. 
+As you can see the Tukey test result above, the p-value for male:1 - male:2 (7th row in gender:Diet table) is 0.4912294 which is larger than 0.01 significance level. The hull hypothesis is not rejected. Null hypothesis in this case is Male Diet 1 and Male Diet 2 has no difference. 
 
 Therefore, there is no significant difference in the weight loss of males between diet 1 and diet 2. 
 
@@ -150,7 +173,8 @@ olSatisfaction <- boxplot(Satisfaction ~ StatPak, data = df.stat)$out
 olTime
 olSatisfaction
 
-out <- df.stat[df.stat$StatPak == "BMDP" & (df.stat$Time == 15 | df.stat$Time == 44 | df.stat$Time == 8),]
+out <- df.stat[df.stat$StatPak == "BMDP" & 
+                 (df.stat$Time == 15 | df.stat$Time == 44 | df.stat$Time == 8),]
 out
 ```
 
@@ -181,25 +205,29 @@ P-value for Satisfaction of SW is 0.03 which is more than 0.01 significance leve
 leveneTest(Time ~ StatPak, data = df.NoOutlier)
 ```
 
-P-value of Levene's for Time is 0.004 < 0.05 -> assumption is not satisfied.
+P-value of Levene's for Time is 0.004 < 0.01 -> assumption is not satisfied.
+
+Since the assumption is not met, independent group comparison would be done by Tamhane test in (c).
 
 #### Levene's test for Satisfaction
 ```{r echo=FALSE}
 leveneTest(Satisfaction ~ StatPak, data = df.NoOutlier)
 ```
 
-P-value of Levene;s for Satisfaction is 0.6322 < 0.05 -> assumption is satisfied.
+P-value of Levene;s for Satisfaction is 0.6322 < 0.01 -> assumption is satisfied.
+
+Since the assumption is met, independent group comparison would be done by Tukey test in (c).
 
 #### Box's M test
 ```{r echo=FALSE}
 boxM(data = df.NoOutlier[,6:7], group = df.NoOutlier$StatPak)
 ```
 
-P-value of Box test is 0.007 < 0.05
+P-value of Box test is 0.007 < 0.01
 -> Homogeneity of cov matrices assumption not met. We should use Pillai's Trace for interpretation of MANOVA results.
 
 ## (b) Main effects
-
+### Pillai-Bartlett trace
 ```{r echo=FALSE}
 # One way manova
 RespoVari <- cbind(df.NoOutlier$Time,df.NoOutlier$Satisfaction)
@@ -210,6 +238,7 @@ summary(fit.stat, test = 'Pillai')
 In this case, Pillai trace is used for multivariate test. 
 Based on the Pillai's Trce result, StatPak has a statistically significant effect on Time and Satisfaction as a group (F=38.6, p=0.000<0.01)
 
+### Tests of between-subjects effects
 ```{r echo=FALSE}
 summary.aov(fit.stat)
 ```
@@ -219,16 +248,27 @@ Response 2 -> Satisfaction
 
 There are significant relationships between both StatPak & Time and StatPak & Satisfaction. This means different stat packages has a significant effect on the results of Time and Satisfactions as an individual. 
 
-## (c)?? Independent Group
+\newpage
+
+## (c) Independent Group
 ### Tamhane test for Time
 ```{r echo=FALSE}
 fit.T2 <- tamhaneT2Test(df.NoOutlier$Time, df.NoOutlier$StatPak)
 summary(fit.T2)
 ```
 
-### Tukey test for satisfaction
+In the relationship with Time, there is not a significant difference between SPSS and SAS(p-value=0.636>0.01) while there are significant differences between SAS and BMDP (p-vale=0.000<0.01); and SPSS and BMDP (p-value=0.000<0.01).
+
+A Tamhane post hoc test revealed that the Time was statistically significantly decreased after taking BMDP compared to SAS and SPSS.
+
+### Tukey test for Satisfaction
 ```{r echo=FALSE}
 fit.TK <- aov(Satisfaction ~ StatPak, data = df.NoOutlier)
 TukeyHSD(fit.TK)
 ```
 
+In relationship with satisfaction, all p-value are less than .01, then there are significant difference between the independent groups.
+
+The mean difference between SPSS and BMDP is the highest (difference value is equal to approx. 65.79).
+
+A tukey post hoc test revealed that the satisfaction was statistically significantly increased taking SPSS compared to SAS and BMDP. Moreover, the satisfaction was statistically significantly increased SAS compared to BMDP. 
